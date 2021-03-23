@@ -1,5 +1,6 @@
 import { Component, Host, State, h } from "@stencil/core"
 import * as THREE from "three"
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 interface CursorPosition {
     x: number,
@@ -25,9 +26,11 @@ export class ThreeD {
     @State() camera: any;
 
     private sizes = {
-        width: 800,
-        height: 500
+        width: window.innerWidth,
+        height: window.innerHeight,
     }
+
+    controls: any;
 
     cursorPosition: CursorPosition = { x: 0, y: 0 }
 
@@ -37,14 +40,27 @@ export class ThreeD {
     private updateCursorPosition = (e) => {
         this.cursorPosition.x = e.clientX / this.sizes.width - 0.5
         this.cursorPosition.y = e.clientY / this.sizes.height - 0.5
+        console.log(this.cursorPosition)
+    }
+
+    private onResize = () => {
+        this.sizes.width = window.innerWidth
+        this.sizes.height = window.innerHeight
+        /** update camera aspect ratio with the new screen size */
+        this.camera.aspect = this.sizes.width / this.sizes.height
+        /** update the renderer to adapt to the new screen ratio */
+        this.renderer.setSizes(this.sizes.width, this.sizes.height)
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     }
 
     connectedCallback() {
-        window.addEventListener("mouseover", this.updateCursorPosition)
+        window.addEventListener("mousemove", this.updateCursorPosition)
+        window.addEventListener("resize", this.onResize)
     }
 
     disconnectedCallback() {
-        window.removeEventListener("mouseover", this.updateCursorPosition)
+        window.removeEventListener("mousemove", this.updateCursorPosition)
+        window.removeEventListener("resize", this.onResize)
     }
 
     componentWillLoad() {
@@ -89,6 +105,11 @@ export class ThreeD {
         this.renderer = new THREE.WebGLRenderer({ canvas: canvas })
         this.renderer.setSize(this.sizes.width, this.sizes.height)
         this.renderer.render(this.scene, this.camera)
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+        this.controls = new OrbitControls(this.camera, canvas)
+        this.controls.enableDamping = true
+        this.animation()
     }
 
     private changeCubePosition = () => {
@@ -106,16 +127,21 @@ export class ThreeD {
         this.renderer.render(this.scene, this.camera)
     }
 
-    private animateGroup = () => {
-        // dom something
+    private animation = () => {
+        // this.camera.position.x = this.cursorPosition.x * 10
+        // this.camera.position.y = - this.cursorPosition.y * 10
+        // this.camera.lookAt(this.group.position)
+        this.controls.update()
+        this.renderer.render(this.scene, this.camera)
+        window.requestAnimationFrame(this.animation)
     }
 
     render() {
         return (
-            <Host>
+            <Host class="three-d">
+                <canvas class="canvas"></canvas>
                 <p onClick={this.cameraLookAt}>Camera look at </p>
                 <h1 onClick={this.changeCubePosition}>Hello from the component</h1>
-                <canvas class="canvas"></canvas>
             </Host>
         )
     }
