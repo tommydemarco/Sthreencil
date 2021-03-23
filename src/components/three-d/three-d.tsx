@@ -1,6 +1,7 @@
 import { Component, Host, State, h } from "@stencil/core"
 import * as THREE from "three"
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import * as dat from 'dat.gui'
 
 interface CursorPosition {
     x: number,
@@ -36,6 +37,12 @@ export class ThreeD {
 
     /** visual representation of the axis for dev mode */
     axesHelper: any;
+
+    /** debug control panel and its parameters */
+    gui: any;
+    parameters = {
+        color: "#999",
+    }
 
     private updateCursorPosition = (e) => {
         this.cursorPosition.x = e.clientX / this.sizes.width - 0.5
@@ -75,11 +82,11 @@ export class ThreeD {
         /** create our cube objects and adding them to our meshes state */
         const cube1 = new THREE.Mesh(
             new THREE.BoxGeometry(1, 1, 1),
-            new THREE.MeshBasicMaterial({ color: "#999" })
+            new THREE.MeshBasicMaterial({ color: this.parameters.color })
         )
         const cube2 = new THREE.Mesh(
             new THREE.BoxGeometry(1.3, 1.3, 1.5),
-            new THREE.MeshBasicMaterial({ color: "#888" })
+            new THREE.MeshPhongMaterial()
         )
         this.meshes = {...this.meshes, cube1, cube2 }
 
@@ -96,6 +103,23 @@ export class ThreeD {
         this.scene.add(this.group)
         this.scene.add(this.camera)
         this.scene.add(this.axesHelper)
+
+        /** adding a lights to the scene */
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
+        const pointLight = new THREE.PointLight(0xffffff, 0.5)
+        pointLight.position.x = 2
+        pointLight.position.y = 3
+        pointLight.position.z = 4
+        this.scene.add(pointLight, ambientLight)
+
+        /** initialising the gui debug panel */
+        this.gui = new dat.GUI()
+        this.gui.add(this.group.position, 'y', - 3, 3, 0.01).name('group elevation')
+        this.gui.add(this.group, 'visible')
+        this.gui.add(this.meshes.cube2.material, 'wireframe').name('wireframe')
+        this.gui.addColor(this.parameters, 'color').onChange(() => {
+            this.meshes.cube2.material.color.set(this.parameters.color)
+        })
     }
 
     componentDidLoad() {
