@@ -53,11 +53,12 @@ export class ThreeD {
     private onResize = () => {
         this.sizes.width = window.innerWidth
         this.sizes.height = window.innerHeight
-        /** update camera aspect ratio with the new screen size */
-        this.camera.aspect = this.sizes.width / this.sizes.height
         /** update the renderer to adapt to the new screen ratio */
-        this.renderer.setSizes(this.sizes.width, this.sizes.height)
+        this.renderer.setSize(this.sizes.width, this.sizes.height)
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+        /** update camera aspect ratio with the new screen size */
+        this.camera.aspect = window.innerWidth / window.innerHeight
+        this.camera.updateProjectionMatrix()
     }
 
     connectedCallback() {
